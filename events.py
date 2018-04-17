@@ -16,3 +16,12 @@ def to_event_stream(records):
     for _ in range(len(hp)):
         yield ("exit", heapq.heappop(hp))
 
+def tallyPopulation(events):
+    pop = 0
+    for event in events:
+        if event[0] == "entry":
+            pop +=1
+        elif event[0] == 'exit':
+            pop -= 1
+        yield (event[0], event[1], pop)
+

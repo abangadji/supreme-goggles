@@ -23,6 +23,6 @@ def recordsFromStream(istrm, fields=FIELDS, parsers=FIELD_PARSER):
         yield tmp
 
 def recordsfromfile(path, fields=FIELDS, parsers=FIELD_PARSER):
-    with open(path, newlines='') as ifil:
+    with open(path, newline='') as ifil:
         return recordsFromStream(ifil, fields, parsers)
 

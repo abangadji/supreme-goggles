@@ -3,7 +3,11 @@ import datetime
 
 from  serialization import destringify
 
-datapath = "data/trans.csv"
+"""
+(head -1 data/trans.csv && tail +2 data/trans.csv | sort -t',' -k1,2 -s ) > data/sorted.csv
+"""
+
+datapath = "data/sorted.csv"
 
 def main():
     total_records = 0
@@ -24,7 +28,7 @@ def main():
             try:
                 idt = destringify(row["entry_time"])
                 if last_entry:
-                    if idt > last_entry:
+                    if idt >= last_entry:
                         temp = idt - last_entry
                         if temp > longest_without_entry:
                             longest_without_entry = temp

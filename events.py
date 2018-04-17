@@ -25,6 +25,16 @@ def tallyPopulation(events):
             pop -= 1
         yield (event[0], event[1], {"pop": pop})
 
+def makeCounter():
+    count = 0
+    def consumer(event):
+        nonlocal count 
+        count == 1
+    def reporter():
+        nonlocal count
+        return count
+    return consumer, reporter
+
 def makeHighestDaysMonitorReporter(n):
     hp = []
     prevday = None
@@ -34,7 +44,8 @@ def makeHighestDaysMonitorReporter(n):
         nonlocal curmax
         nonlocal hp
         epop = event[-1]['pop']
-        curday = event[1].date()
+        #curday = event[1].date()
+        curday = event[1].split(maxsplit=1)[0]
         if prevday is None:
             prevday = curday
         if curday != prevday:

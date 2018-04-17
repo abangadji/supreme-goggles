@@ -87,4 +87,8 @@ def test_daily_highs(multidayevents):
     results = r()
     assert len(results) == 2
     print(results)
-    assert False
+    assert results[0][0] == 3
+    assert results[0][1] == util.destringify("2012-12-02 05:48:00").date()
+
+    assert results[1][0] == 4
+    assert results[1][1] == util.destringify("2012-12-01 12:01:00").date()

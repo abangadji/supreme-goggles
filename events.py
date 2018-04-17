@@ -23,5 +23,44 @@ def tallyPopulation(events):
             pop +=1
         elif event[0] == 'exit':
             pop -= 1
-        yield (event[0], event[1], pop)
+        yield (event[0], event[1], {"pop": pop})
+
+def makeHighestDaysMonitorReporter(n):
+    hp = []
+    curday = None
+    curmax = 0
+    def consumer(event):
+        nonlocal curday
+        nonlocal curmax
+        nonlocal hp
+        epop = event[-1]['pop']
+        dd = event[1].date()
+        if curday is None:
+            curday = dd
+        if curday != dd:
+            # deal with storing day's day
+            newelt = (curmax, dd)
+            if len(hp) == n and hp[0][0] < curmax:
+                heapq.heapreplace(hp, newelt)
+            elif len(hp) < n:
+                heapq.heappush(hp, newelt)
+            curday = dd
+            curmax = 0
+        else:
+            if epop > curmax:
+                curmax = epop
+    def reporter():
+        nonlocal curday
+        nonlocal curmax
+        nonlocal hp
+        if len(hp) == n and hp[0][0] < curmax:
+            heapq.heapreplace(hp, (curmax, curday))
+        elif len(hp) < n:
+            heapq.heappush(hp, (curmax, curday))
+        return hp
+    return consumer, reporter
+
+def consumePEvent(popEvents, eat):
+    for pevent in popEvents:
+        eat(pevent)
 

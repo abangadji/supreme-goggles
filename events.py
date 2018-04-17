@@ -7,9 +7,8 @@ def to_event_stream(records):
         # process input stream
         i = rec['entry_time']
         o = rec['exit_time']
-        if len(hp) > 0:
-            if hp[0] <= i:
-                yield ("exit", heapq.heappop(hp))
+        while len(hp) > 0 and hp[0] <= i:
+            yield ("exit", heapq.heappop(hp))
         yield ("entry", i)
         heapq.heappush(hp, o)
         

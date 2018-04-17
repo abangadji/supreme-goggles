@@ -31,3 +31,18 @@ In order to play with yield management, you need demand data. I came across http
     1. how similar is the first week of the month to the prior?
     1. year over year growth
     
+## First look at data
+sorting is a good thing:
+```shell
+(head -1 data/trans.csv && tail +2 data/trans.csv | sort -t',' -k1,2 -s ) > data/sorted.csv
+```
+then:
+```shell
+$ python3 sanity.py 
+records: 1654194
+all entries in accending order: True
+longest stretch without entries: 2 days, 9:38:00 see record: 38498
+number of stays longer than 24hr: 6389
+longest stay: 286 days, 12:55:00 at record: 100231
+all records have parsable datetimes for entry and exit
+```

@@ -72,7 +72,8 @@ def makeHighestDaysMonitorReporter(n):
         return tmp
     return consumer, reporter
 
-def consumePEvent(popEvents, eat):
+def consumePEvent(popEvents, *eaters):
     for pevent in popEvents:
-        eat(pevent)
+        for eater in eaters:
+            eater(pevent)
 

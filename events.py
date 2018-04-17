@@ -72,6 +72,46 @@ def makeHighestDaysMonitorReporter(n):
         return tmp
     return consumer, reporter
 
+def makeLowestDaysMonitorReporter(n):
+    hp = []
+    prevday = None
+    curmax = 0
+    def consumer(event):
+        nonlocal prevday
+        nonlocal curmax
+        nonlocal hp
+        epop = event[-1]['pop']
+        #curday = event[1].date()
+        curday = event[1].split(maxsplit=1)[0]
+        if prevday is None:
+            prevday = curday
+        if curday != prevday:
+            # deal with storing day's day
+            newelt = (curmax * -1, prevday)
+            if len(hp) == n and hp[0][0] < newelt[0]:
+                heapq.heapreplace(hp, newelt)
+                #heapq._heapreplace_max(hp, newelt)
+            elif len(hp) < n:
+                heapq.heappush(hp, newelt)
+            prevday = curday
+            curmax = 0
+        else:
+            if epop > curmax:
+                curmax = epop
+    def reporter():
+        nonlocal prevday
+        nonlocal curmax
+        nonlocal hp
+        # deal with storing day's day
+        newelt = (curmax * -1, prevday)
+        if len(hp) == n and hp[0][0] < newelt[0]:
+            heapq.heapreplace(hp, newelt)
+        elif len(hp) < n:
+            heapq.heappush(hp, newelt)
+        tmp = [heapq.heappop(hp) for ii in range(len(hp))]
+        return [(-1 * pop, date) for pop, date in tmp]
+    return consumer, reporter
+
 def consumePEvent(popEvents, *eaters):
     for pevent in popEvents:
         for eater in eaters:

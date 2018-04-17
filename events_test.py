@@ -36,6 +36,29 @@ def smalldataevents():
     return expected
 
 @pytest.fixture
+def multidayeventstrs():
+    expected = [
+        ("entry", "2012-12-01 05:48:00"),
+        ("entry", "2012-12-01 06:57:00"),
+        ("exit", "2012-12-01 09:52:00"),
+        ("entry", "2012-12-01 10:25:00"),
+        ("entry", "2012-12-01 10:40:00"),
+        ("entry", "2012-12-01 10:46:00"),
+        ("exit", "2012-12-01 10:59:00"),
+        ("exit", "2012-12-01 11:02:00"),
+        ("exit", "2012-12-01 11:27:00"),
+        ("exit", "2012-12-01 12:01:00"),
+        ("entry", "2012-12-02 05:48:00"),
+        ("entry", "2012-12-02 06:57:00"),
+        ("exit", "2012-12-02 09:52:00"),
+        ("entry", "2012-12-02 10:25:00"),
+        ("entry", "2012-12-02 10:40:00"),
+        ("exit", "2012-12-02 11:02:00"),
+        ("exit", "2012-12-02 11:27:00"),
+        ("exit", "2012-12-02 12:01:00"),
+        ]
+    return expected
+@pytest.fixture
 def multidayevents():
     expected = [
         ("entry", util.destringify("2012-12-01 05:48:00")),
@@ -79,16 +102,30 @@ def test_tallyPop(smalldatafile, smalldataevents):
         assert event[1] == smalldataevents[ii][1]
         assert event[2]['pop'] == expected[ii]
 
-def test_daily_highs(multidayevents):
+def test_high_daily_peaks(multidayeventstrs):
     c, r = events.makeHighestDaysMonitorReporter(2)
 
-    events.consumePEvent(events.tallyPopulation(multidayevents), c)
+    events.consumePEvent(events.tallyPopulation(multidayeventstrs), c)
 
     results = r()
     assert len(results) == 2
     print(results)
     assert results[0][0] == 3
-    assert results[0][1] == util.destringify("2012-12-02 05:48:00").date()
+    assert results[0][1] == "2012-12-02"
 
     assert results[1][0] == 4
-    assert results[1][1] == util.destringify("2012-12-01 12:01:00").date()
+    assert results[1][1] == "2012-12-01"
+
+def test_low_daily_peaks(multidayeventstrs):
+    c, r = events.makeLowestDaysMonitorReporter(2)
+
+    events.consumePEvent(events.tallyPopulation(multidayeventstrs), c)
+
+    results = r()
+    assert len(results) == 2
+    print(results)
+    assert results[0][0] == 4
+    assert results[0][1] == "2012-12-01"
+
+    assert results[1][0] == 3
+    assert results[1][1] == "2012-12-02"

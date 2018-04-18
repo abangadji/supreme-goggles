@@ -24,6 +24,25 @@ def tallyPopulation(events):
             pop -= 1
         yield (event[0], event[1], {"pop": pop})
 
+def eventdate(event):
+    return event[1].split(maxsplit=1)[0]
+
+def tallyDailyIntegral(events):
+    prevevent = None
+    area = 0
+    for event in events:
+        if prevevent is None:
+            prevevent = event
+        if prevevent != event:
+            if eventdate(prevevent) != eventdate(event):
+                yield (area, eventdate(prevevent))
+                area = 0
+            prevpop = prevevent[2]['pop']
+            td = event[1] - prevevent[1]
+            tmparea = prevpop * td.total_seconds()
+            area += temparea
+    yield (area, prevevent[1].date())
+
 def makeCounter():
     count = 0
     def consumer(event):
@@ -44,7 +63,7 @@ def makeHighestDaysMonitorReporter(n):
         nonlocal hp
         epop = event[-1]['pop']
         #curday = event[1].date()
-        curday = event[1].split(maxsplit=1)[0]
+        curday = eventdate(event)
         if prevday is None:
             prevday = curday
         if curday != prevday:

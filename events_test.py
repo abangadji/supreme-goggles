@@ -58,6 +58,7 @@ def multidayeventstrs():
         ("exit", "2012-12-02 12:01:00"),
         ]
     return expected
+
 @pytest.fixture
 def multidayevents():
     expected = [
@@ -102,25 +103,53 @@ def test_tallyPop(smalldatafile, smalldataevents):
         assert event[1] == smalldataevents[ii][1]
         assert event[2]['pop'] == expected[ii]
 
+def test_tallDailyIntegral(multidayeventstrs):
+    evs = [
+        ("entry", "2012-12-01 01:01:00"),
+        ("entry", "2012-12-01 01:02:00"),
+        ("entry", "2012-12-01 01:03:00"),
+        ("exit", "2012-12-01 01:04:00"),
+        ("exit", "2012-12-01 01:05:00"),
+        ("exit", "2012-12-01 01:06:00"),
+        ("entry", "2012-12-02 01:01:00"),
+        ("entry", "2012-12-02 01:02:00"),
+        ("entry", "2012-12-02 01:03:00"),
+        ("exit", "2012-12-02 01:04:00"),
+        ("exit", "2012-12-02 01:05:00"),
+        ("exit", "2012-12-02 01:06:00"),
+        ("entry", "2012-12-02 02:01:00"),
+        ("entry", "2012-12-02 02:02:00"),
+        ("entry", "2012-12-02 02:03:00"),
+        ("exit", "2012-12-02 02:04:00"),
+        ("exit", "2012-12-02 02:05:00"),
+        ("exit", "2012-12-02 02:06:00"),
+        ("entry", "2012-12-03 23:59:00"),
+        ("exit", "2012-12-04 00:01:00"),
+        ]
+    pops = events.tallyPopulation(multidayeventstrs)
+    integrals = events.tallyDailyIntegral(pops)
+    
+    expected = [
+            (60+120+180+12+60, "2012-12-01"),
+            ((60+120+180+12+60) *2, "2012-12-02"),
+            ((60), "2012-12-03"),
+            ((60), "2012-12-04"),
+            ]
+
 def test_high_daily_peaks(multidayeventstrs):
     c, r = events.makeHighestDaysMonitorReporter(2)
-
     events.consumePEvent(events.tallyPopulation(multidayeventstrs), c)
-
     results = r()
     assert len(results) == 2
     print(results)
     assert results[0][0] == 3
     assert results[0][1] == "2012-12-02"
-
     assert results[1][0] == 4
     assert results[1][1] == "2012-12-01"
 
 def test_low_daily_peaks(multidayeventstrs):
     c, r = events.makeLowestDaysMonitorReporter(2)
-
     events.consumePEvent(events.tallyPopulation(multidayeventstrs), c)
-
     results = r()
     assert len(results) == 2
     print(results)

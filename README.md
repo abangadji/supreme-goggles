@@ -17,6 +17,10 @@ In order to play with yield management, you need demand data. I came across http
    * Transformation into the output of an unknown function of time: Demand(t)? Then each record of the source data has two events, an increment of D and a decrement of D. Timeseries tools become very relavent
      * does this imply a need for a timeseries of the the augmentations?
    * Time boxs? Pershaps simplifying to population in box, n-cars in the morning, m-cars in the evening... gives 
+   
+### Performance notes
+ * parsing datetimes is slow
+   * looking for the fullest days is 5X faster with strings than it is with datetimes
 ## Analytical Questions to Answer
  1. Can we get a sense of "typical"?
     1. Typical weekday?

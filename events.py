@@ -53,7 +53,7 @@ def makeCounter():
         return count
     return consumer, reporter
 
-def buildFoldOverWindow(windowingfn, base_val, foldfn, reportcb, extract_val):
+def buildFoldOverWindow(windowingfn, base_val, leftfold, reportcb, extract_val):
     acc_val = base_val
     active_window = None
     def folder(event):
@@ -67,7 +67,7 @@ def buildFoldOverWindow(windowingfn, base_val, foldfn, reportcb, extract_val):
             reportcb(active_window, acc_val)
             acc_val = base_val
             active_window = window
-        acc_val = foldfn(acc_val, curval)
+        acc_val = leftfold(acc_val, curval)
     def endStream():
         nonlocal acc_val
         nonlocal active_window
@@ -109,68 +109,54 @@ def nlargestPerWindow(n, extract_val, base_case, accum, windowid):
     return consumer, reporter
 
 def makeHighestDaysMonitorReporter(n):
-    def accum(cur, existing):
-        if cur > existing:
-            return cur
-        return existing
+    hp = []
+    def folder(acc, v):
+        if v > acc:
+            return v
+        return acc
     def extract_val(event):
         return event[-1]['pop']
     base_case = 0
-    def windowid(event):
+    def w(event):
         return eventdate(event)
-    return nlargestPerWindow(n, extract_val, base_case, accum, windowid)
+    def cb(w, acc):
+        nonlocal hp
+        if len(hp) == n and acc > hp[0][0]:
+            heapq.heapreplace(hp, (acc, w))
+        elif len(hp) < n:
+            heapq.heappush(hp, (acc, w))
+    proc, term =  buildFoldOverWindow(w, base_case, folder, cb, extract_val)
+    def results():
+        nonlocal hp
+        term()
+        tmp = [heapq.heappop(hp) for ii in range(len(hp))]
+        return tmp
+    return proc, results
 
 def makeLowestDaysMonitorReporter(n):
-    '''
-    def accum(cur, existing):
-        if cur > existing:
-            return cur
-        return existing
+    hp = []
+    def folder(acc, v):
+        if v < acc:
+            return v
+        return acc
     def extract_val(event):
         return -1 * event[-1]['pop']
     base_case = 0
-    def windowid(event):
+    def w(event):
         return eventdate(event)
-    return nlargestPerWindow(n, extract_val, base_case, accum, windowid)
-    '''
-    hp = []
-    prevday = None
-    curmax = 0
-    def consumer(event):
-        nonlocal prevday
-        nonlocal curmax
+    def cb(w, acc):
         nonlocal hp
-        epop = event[-1]['pop']
-        #curday = event[1].date()
-        curday = event[1].split(maxsplit=1)[0]
-        if prevday is None:
-            prevday = curday
-        if curday != prevday:
-            # deal with storing day's day
-            newelt = (curmax * -1, prevday)
-            if len(hp) == n and hp[0][0] < newelt[0]:
-                heapq.heapreplace(hp, newelt)
-                #heapq._heapreplace_max(hp, newelt)
-            elif len(hp) < n:
-                heapq.heappush(hp, newelt)
-            prevday = curday
-            curmax = 0
-        else:
-            if epop > curmax:
-                curmax = epop
-    def reporter():
-        nonlocal prevday
-        nonlocal curmax
-        nonlocal hp
-        # deal with storing day's day
-        newelt = (curmax * -1, prevday)
-        if len(hp) == n and hp[0][0] < newelt[0]:
-            heapq.heapreplace(hp, newelt)
+        if len(hp) == n and acc < hp[0][0]:
+            heapq.heapreplace(hp, (acc, w))
         elif len(hp) < n:
-            heapq.heappush(hp, newelt)
+            heapq.heappush(hp, (acc, w))
+    proc, term =  buildFoldOverWindow(w, base_case, folder, cb, extract_val)
+    def results():
+        nonlocal hp
+        term()
         tmp = [heapq.heappop(hp) for ii in range(len(hp))]
         return [(-1 * pop, date) for pop, date in tmp]
-    return consumer, reporter
+    return proc, results
 
 def consumePEvent(popEvents, *eaters):
     for pevent in popEvents:

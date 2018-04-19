@@ -53,6 +53,27 @@ def makeCounter():
         return count
     return consumer, reporter
 
+def buildFoldOverWindow(windowingfn, base_val, foldfn, reportcb, extract_val):
+    acc_val = base_val
+    active_window = None
+    def folder(event):
+        nonlocal acc_val
+        nonlocal active_window
+        window = windowingfn(event)
+        curval = extract_val(event)
+        if active_window is None:
+            active_window = window
+        if window != active_window:
+            reportcb(active_window, acc_val)
+            acc_val = base_val
+            active_window = window
+        acc_val = foldfn(acc_val, curval)
+    def endStream():
+        nonlocal acc_val
+        nonlocal active_window
+        reportcb(active_window, acc_val)
+    return folder, endStream
+
 def nlargestPerWindow(n, extract_val, base_case, accum, windowid):
     hp = []
     prevwindow = None

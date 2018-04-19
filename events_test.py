@@ -1,5 +1,6 @@
 import io
 import csv
+import itertools
 
 import pytest
 
@@ -158,3 +159,32 @@ def test_low_daily_peaks(multidayeventstrs):
 
     assert results[1][0] == 3
     assert results[1][1] == "2012-12-02"
+
+def test_buildFoldOverWindow_streakcounter():
+    def w(e):
+        return e
+    def foldfn(acc, v):
+        return acc+1
+    base = 0
+    results = []
+    def cb(w, v):
+        nonlocal results
+        results.append( (w, v) )
+    def getval(v):
+        return v
+
+    (folder, term) = events.buildFoldOverWindow(w, base, foldfn, cb, getval)
+
+    streams = [
+            [1] * 3,
+            [2] * 2,
+            [1] * 5,
+            [3] * 3,
+            ]
+    expect = [ (v[0], len(v) ) for v in streams ]
+    s = itertools.chain(*streams)
+    for i in s:
+        folder(i)
+    term()
+    for ii, v in enumerate(expect):
+        assert v == results[ii]

@@ -74,40 +74,6 @@ def buildFoldOverWindow(windowingfn, base_val, leftfold, reportcb, extract_val):
         reportcb(active_window, acc_val)
     return folder, endStream
 
-def nlargestPerWindow(n, extract_val, base_case, accum, windowid):
-    hp = []
-    prevwindow = None
-    window_acc = base_case 
-    def consumer(event):
-        nonlocal prevwindow
-        nonlocal window_acc
-        nonlocal hp
-        window = windowid(event)
-        curval = extract_val(event)
-        if prevwindow is None:
-            prevwindow = window
-        if window != prevwindow:
-            newelt = (window_acc, prevwindow)
-            if len(hp) == n and hp[0][0] < window_acc:
-                heapq.heapreplace(hp, newelt)
-            elif len(hp) < n:
-                heapq.heappush(hp, newelt)
-            prevwindow = window
-            window_acc = base_case
-        window_acc = accum(curval, window_acc)
-    def reporter():
-        nonlocal prevwindow
-        nonlocal window_acc
-        nonlocal hp
-        # deal with storing day's day
-        if len(hp) == n and hp[0][0] < window_acc:
-            heapq.heapreplace(hp, (window_acc, prevwindow))
-        elif len(hp) < n:
-            heapq.heappush(hp, (window_acc, prevwindow))
-        tmp = [heapq.heappop(hp) for ii in range(len(hp))]
-        return tmp
-    return consumer, reporter
-
 def makeHighestDaysMonitorReporter(n):
     hp = []
     def folder(acc, v):

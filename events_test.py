@@ -172,9 +172,7 @@ def test_buildFoldOverWindow_streakcounter():
         results.append( (w, v) )
     def getval(v):
         return v
-
     (folder, term) = events.buildFoldOverWindow(w, base, foldfn, cb, getval)
-
     streams = [
             [1] * 3,
             [2] * 2,
@@ -188,3 +186,28 @@ def test_buildFoldOverWindow_streakcounter():
     term()
     for ii, v in enumerate(expect):
         assert v == results[ii]
+
+def test_buildFoldOverWindow_maxoverwindow():
+    def w(e):
+        return e // 10
+    def foldfn(acc, v):
+        if v > acc:
+            return v
+        return acc
+    base = 0
+    results = []
+    def cb(w, v):
+        nonlocal results
+        results.append( (w, v) )
+    def getval(v):
+        return v % 10
+    (folder, term) = events.buildFoldOverWindow(w, base, foldfn, cb, getval)
+    rangestops = [5, 7, 8,2, 6]
+    streams = [ range(ii*10, ii*10+v) for ii, v in enumerate(rangestops)]
+    s = itertools.chain(*streams)
+    for i in s:
+        folder(i)
+    term()
+    for ii, v in enumerate(results):
+        assert v[1] == rangestops[ii] -1
+        assert v[0] == ii
